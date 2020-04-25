@@ -4,7 +4,7 @@ const jwt = require('jsonwebtoken')
 const logIn = async (req, res, next) => {
     try {
         const {email, password} = req.body;
-        if(email && password) {
+        if(!email && !password) {
             return res.status(400).json({
                 success: false,
                 message: 'Email or password is required'
