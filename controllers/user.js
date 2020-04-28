@@ -1,5 +1,6 @@
 const User = require('../models/user');
 const jwt = require('jsonwebtoken')
+const auth = require('../middlewares/authentication')
 
 const logIn = async (req, res, next) => {
     try {
@@ -107,6 +108,12 @@ const updatePassword = async (req, res) => {
     let {oldPassword, newPassword, comfirmPassword} = req.body;
     let {userID} = req.user;
     let user = await User.findById(userID);
+    if(oldPassword == null || newPassword == null || comfirmPassword == null) {
+        return res.status(400).json({
+            success: false,
+            message: 'Password is required'
+        })
+    }
     if(user.password !== oldPassword) {
         return res.status(400).json({
             success: false,
@@ -129,7 +136,7 @@ const updatePassword = async (req, res) => {
     if(newUser){
         return res.status(200).json({
             success: true,
-            message: 'success '
+            message: 'Password is updated successfully '
         })
     }
 }

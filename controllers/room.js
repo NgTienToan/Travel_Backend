@@ -1,4 +1,5 @@
-const Room = require('../models/room')
+const Room = require('../models/room');
+const auth = require('../middlewares/authentication')
 
 const createRoom = async (req, res) => {
     try {
@@ -25,18 +26,19 @@ const createRoom = async (req, res) => {
 }
 const bookRoom = async (req, res) => {
     try {
-        const {roomID, rentorID} = req.body;
+        const rentorID = req.user.userID;
+        const {roomID, checkInDate, checkOutDate} = req.body;
         if(!roomID && !rentorID){
             return res.status(400).json({
                 success: false,
                 message: 'RoomID or rentorID is required'
             })
         }
-        let room = Room.findOneAndUpdate({_id: roomID}, {$set: {rentorID: rentorID, status: 'RENTED'}});
+        let room = await Room.findOneAndUpdate({_id: roomID}, {rentorID: rentorID, checkInDate: checkInDate, checkOutDate: checkOutDate, status: 'RENTED'});
         if(room){
             return res.status(200).json({
                 success: true,
-                message: 'Room is booked successfully',
+                message: 'Đặt Phòng Thành Công',
                 data: {
                     room
                 }
@@ -48,6 +50,7 @@ const bookRoom = async (req, res) => {
 }
 const cancelRoom  = async (req, res) => {
     try {
+        const {userID} = req.user;
         const {roomID} = req.body;
         if(!roomID){
             return res.status(400).json({
@@ -55,11 +58,19 @@ const cancelRoom  = async (req, res) => {
                 message: 'RoomID is required'
             })
         }
-        let room = Room.findOneAndUpdate({_id: roomID}, {$set: {rentorID: "", status: 'EMPTY'}});
+        let temp = await Room.findOne({_id: roomID});
+        if(userID != temp.rentorID) {
+            return res.status(400).json({
+                success: false,
+                message: 'you can not cancel this room'
+            })
+        }
+
+        let room = await Room.findOneAndUpdate({_id: roomID}, {rentorID: "", checkInDate: "", checkOutDate: "", status: 'EMPTY'});
         if(room){
             return res.status(200).json({
                 success: true,
-                message: 'Room is booked successfully',
+                message: 'Hủy Đặt Phòng Thành Công',
                 data: {
                     room
                 }
@@ -124,10 +135,23 @@ const getRoomById = async (req, res) => {
     }
 }
 
+const getBookingRoom = async (req, res) => {
+    const {userID} = req.user;
+    let rooms = await Room.find({rentorID: userID});
+    if(rooms){
+        return res.json({
+            success: true,
+            message: 'success',
+            data: rooms
+        })
+    }
+}
+
 module.exports={
     createRoom,
     getRoomById,
     bookRoom,
     cancelRoom,
-    getAllRoomEmpty
+    getAllRoomEmpty,
+    getBookingRoom
 }

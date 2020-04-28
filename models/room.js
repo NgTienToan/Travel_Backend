@@ -56,6 +56,14 @@ const roomSchema = new mongoose.Schema(
                 required: false
             },
         },
+        checkInDate: {
+            type: String,
+            required: false
+        },
+        checkOutDate: {
+            type: String,
+            required: false
+        },
         status: {
             type: String,
             required: true,
